@@ -1,6 +1,7 @@
 use std::error::Error;
 use std::{env, fs};
 
+#[derive(Debug, PartialEq)]
 pub struct Config {
     pub query: String,
     pub file_path: String,
@@ -8,6 +9,32 @@ pub struct Config {
 }
 
 impl Config {
+    /// Wrap informations passed in and returns a Result<Config>
+    /// The iter should be:
+    /// 
+    /// 1   irrelevant, since if you pass in env::args().iter(), the first arg will be the program's name,
+    ///     which we don't need at all
+    /// 
+    /// 2   the substring you want to query
+    /// 
+    /// 3   the path to file
+    /// 
+    /// 4.. irrelevant
+    /// 
+    /// if the iter does not contains at least 3 elements, this function will failed by returning a Err
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// let iter = vec![String::from(""),String::from("so"),String::from("poem.txt")].into_iter();
+    /// let c = minigrep::Config {
+    ///     query: String::from("so"),
+    ///     file_path: String::from("poem.txt"),
+    ///     ignore_case: std::env::var("IGNORE_CASE").is_ok(),
+    /// };
+    /// assert_eq!(minigrep::Config::build(iter), Ok(c));
+    /// 
+    /// ```
     pub fn build(mut args: impl Iterator<Item = String>) -> Result<Config, &'static str> {
         args.next();
         let query = match args.next() {
@@ -21,14 +48,6 @@ impl Config {
         };
 
         let ignore_case = env::var("IGNORE_CASE").is_ok();
-
-        // if args.len() < 3 {
-        //     return Err("Not enough arguments");
-        // }
-        // let query = args[1].clone();
-        // let file_path = args[2].clone();
-
-        // let ignore_case = env::var("IGNORE_CASE").is_ok();
 
         Ok(Config { query, file_path, ignore_case })
     }
@@ -49,6 +68,7 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
+
 
 fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
     contents.lines().filter(|line| line.contains(query)).collect()
